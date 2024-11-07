@@ -1,6 +1,3 @@
-I used a template from bootstrapmade to design this webiste, with heavy editing.
+Welcome to my personal website! This is intended for colleges or anyone interested in me to view.
 
-Template Name: MyResume
-Template URL: https://bootstrapmade.com/free-html-bootstrap-template-my-resume/
-Author: BootstrapMade.com
-License: https://bootstrapmade.com/license/
+This webpage was created with a template from https://bootstrapmade.com/
