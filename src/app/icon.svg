@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <defs>
+    <linearGradient id="foil" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f3e6bd"/>
+      <stop offset=".38" stop-color="#d9bc7d"/>
+      <stop offset=".66" stop-color="#a08347"/>
+      <stop offset="1" stop-color="#e3cd96"/>
+    </linearGradient>
+    <linearGradient id="pages" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fffaf0"/>
+      <stop offset="1" stop-color="#d8c28e"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Warm page block peeking out from beneath the cover. -->
+  <path d="M5.5 4h20.8A2.7 2.7 0 0 1 29 6.7v19.8a2.7 2.7 0 0 1-2.7 2.7H5.5z" fill="url(#pages)"/>
+
+  <!-- Clothbound cover, spine, and restrained foil detailing. -->
+  <rect x="2.5" y="1.5" width="24.2" height="26" rx="2.7" fill="#181818" stroke="url(#foil)" stroke-width="1.25"/>
+  <path d="M8.15 2.2v24.6" stroke="#050505" stroke-width="1.7" opacity=".9"/>
+  <path d="M8.7 2.2v24.6" stroke="url(#foil)" stroke-width=".7" opacity=".8"/>
+  <path d="M4.2 5.4h2.1M4.2 23.6h2.1" stroke="url(#foil)" stroke-width="1.2" stroke-linecap="round"/>
+
+  <!-- Foil-stamped E, drawn as a path so it stays consistent at favicon sizes. -->
+  <path d="M12 8.2h10.4v3.1h-1.7v-1.15h-5.15v4.15h4.35v1.9h-4.35v4.55h5.3V19.4h1.7v3.3H12v-1.95h1.45v-10.6H12z" fill="url(#foil)" stroke="#ead49a" stroke-width=".12" transform="translate(.45 0)"/>
+</svg>
