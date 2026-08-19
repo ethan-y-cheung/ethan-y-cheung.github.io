@@ -126,7 +126,10 @@ export function Book({
   const coverGroup = useRef<Group>(null);
   const leafRefs = useRef<(Group | null)[]>([]);
   const faceEls = useRef<Record<string, HTMLDivElement | null>>({});
-  const lastFade = useRef<Record<string, number>>({});
+  /**
+   * Last opacity written, cached ON the node rather than under the face key.
+  */
+  const lastFade = useRef(new WeakMap<HTMLDivElement, number>());
   /** Smoothed pickup pose, eased toward heldRef every frame. */
   const deskCur = useRef(0);
 
@@ -177,8 +180,8 @@ export function Book({
     const el = faceEls.current[key];
     if (!el) return;
     const q = Math.round(o * 50) / 50;
-    if (lastFade.current[key] === q) return;
-    lastFade.current[key] = q;
+    if (lastFade.current.get(el) === q) return;
+    lastFade.current.set(el, q);
     el.style.opacity = String(q);
     el.style.visibility = q < 0.02 ? "hidden" : "visible";
     el.style.pointerEvents = q > 0.5 ? "auto" : "none";
