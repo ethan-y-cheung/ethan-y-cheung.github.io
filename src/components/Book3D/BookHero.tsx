@@ -3,12 +3,14 @@
 import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import HeadBar from "@/components/HeadBar";
 import SocialIcons from "@/components/SocialIcons";
 import { beats } from "@/lib/book3d.config";
+import { BEAT_KEY, BOOK_GOTO, beatFromHash } from "@/lib/book-nav";
 import { cover, spreads, type ProjectCard } from "@/lib/spreads";
 
 import ContactFinale, { FinaleFooter, LetterForm } from "./ContactFinale";
+import CoverTitle from "./CoverTitle";
+import { letteringText } from "./cover-lettering";
 import PageContent from "./PageContent";
 import ProjectOverlay, { type ProjectPickup } from "./ProjectOverlay";
 import { useBookSequence } from "./useBookSequence";
@@ -19,11 +21,20 @@ const BookScene = dynamic(() => import("./BookScene"), { ssr: false });
 
 export default function BookHero() {
   const [enhanced, setEnhanced] = useState(false);
+  /**
+   * False until the media queries have actually been read on the client. The
+   * server has to guess, and it guesses "static fallback" — this is how the
+   * fallback knows whether it is a real answer or a placeholder.
+   */
+  const [measured, setMeasured] = useState(false);
 
   useEffect(() => {
     const wide = window.matchMedia("(min-width: 768px)");
     const calm = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const sync = () => setEnhanced(wide.matches && !calm.matches);
+    const sync = () => {
+      setEnhanced(wide.matches && !calm.matches);
+      setMeasured(true);
+    };
     sync();
     wide.addEventListener("change", sync);
     calm.addEventListener("change", sync);
@@ -56,6 +67,39 @@ export default function BookHero() {
   const returnProject = useCallback(() => setHeld(false), []);
   const closeProject = useCallback(() => setPickup(null), []);
 
+  /**
+   * The floating nav bar lives in the root layout, far above this component,
+   * so the two talk through the DOM (see lib/book-nav.ts): the beat goes out
+   * on <body>, and clicks come back as an event. Nothing is published unless
+   * the book is actually interactive, which is what tells the bar to fall back
+   * to plain links on the static fallback.
+   */
+  useEffect(() => {
+    if (!enhanced) return;
+    document.body.dataset[BEAT_KEY] = String(index);
+    return () => {
+      delete document.body.dataset[BEAT_KEY];
+    };
+  }, [enhanced, index]);
+
+  useEffect(() => {
+    if (!enhanced) return;
+    const onGoto = (e: Event) => goTo((e as CustomEvent<number>).detail);
+    window.addEventListener(BOOK_GOTO, onGoto);
+    return () => window.removeEventListener(BOOK_GOTO, onGoto);
+  }, [enhanced, goTo]);
+
+  /**
+   * Opens the beat named by the URL hash — how "/#projects" from the catalog
+   * lands on the right spread. Runs once the book is interactive; the static
+   * fallback lets the browser scroll to the matching section id instead.
+   */
+  useEffect(() => {
+    if (!enhanced) return;
+    const target = beatFromHash(window.location.hash);
+    if (target > 0) goTo(target);
+  }, [enhanced, goTo]);
+
   const pages = useMemo(
     () =>
       spreads.map((spread) => ({
@@ -65,7 +109,7 @@ export default function BookHero() {
     [openProject],
   );
 
-  if (!enhanced) return <BookStatic />;
+  if (!enhanced) return <BookStatic pending={!measured} />;
 
   return (
     <section
@@ -89,7 +133,7 @@ export default function BookHero() {
           progressRef={progressRef}
           heldRef={heldRef}
           spreads={pages}
-          coverFace={<CoverFace />}
+          coverFace={<CoverFace active={index === 0} />}
         />
       </div>
 
@@ -106,9 +150,6 @@ export default function BookHero() {
           onClose={closeProject}
         />
       ) : null}
-
-      {/* Drops in once the cover is opened; hides again on the cover beat. */}
-      <HeadBar index={index} onNavigate={goTo} />
 
       {/* Beat navigation. Also the accessible way through the sequence.
           z-20: must stay clickable above the finale overlay. */}
@@ -143,34 +184,34 @@ export default function BookHero() {
   );
 }
 
-function CoverFace() {
+function CoverFace({ active }: { active: boolean }) {
   return (
     <div className="flex h-full flex-col items-center justify-center text-center">
       {/* Foil-stamped title: gold gradient clipped to the glyphs, with a deboss
           shadow so it reads as pressed into the leather rather than printed. */}
-      <h1
-        className="font-display font-semibold"
-        style={{
-          fontSize: "144px",
-          lineHeight: 1.14,
-          // background-clip: text only paints inside the border box, and
-          // Fraunces' descent pokes below the line box at this size — without
-          // the bottom padding the gradient stops mid-"g" and the descender
-          // looks sheared off. The padding is invisible (background clips to
-          // the glyphs), it only extends the paintable area.
-          padding: "0.1em 0.12em 0.2em",
-          letterSpacing: "0.015em",
-          backgroundImage:
-            "linear-gradient(168deg, #f3e6bd 0%, #d9bc7d 38%, #a08347 66%, #e3cd96 100%)",
-          WebkitBackgroundClip: "text",
-          backgroundClip: "text",
-          color: "transparent",
-          filter:
-            "drop-shadow(0 1px 1px rgba(0,0,0,0.65)) drop-shadow(0 0 20px rgba(212,162,78,0.2))",
-        }}
-      >
-        {cover.title}
-      </h1>
+      {cover.title === letteringText ? (
+        <CoverTitle active={active} />
+      ) : (
+        <h1
+          className="font-display font-semibold"
+          style={{
+            fontSize: "144px",
+            lineHeight: 1.14,
+            // Leave room for Fraunces' descenders inside the clipped gradient.
+            padding: "0.1em 0.12em 0.2em",
+            letterSpacing: "0.015em",
+            backgroundImage:
+              "linear-gradient(168deg, #f3e6bd 0%, #d9bc7d 38%, #a08347 66%, #e3cd96 100%)",
+            WebkitBackgroundClip: "text",
+            backgroundClip: "text",
+            color: "transparent",
+            filter:
+              "drop-shadow(0 1px 1px rgba(0,0,0,0.65)) drop-shadow(0 0 20px rgba(212,162,78,0.2))",
+          }}
+        >
+          {cover.title}
+        </h1>
+      )}
       <p
         // Clears the descenders and their ~20px foil glow (the title's bottom
         // padding already contributes ~13px of the gap).
@@ -193,10 +234,20 @@ function CoverFace() {
  * Narrow viewports and prefers-reduced-motion get the same content as ordinary
  * stacked sections. This is also what the server renders, so every word ships in
  * the initial HTML regardless of whether three.js ever loads.
+ *
+ * `pending` marks the server's guess, before the client has read the media
+ * queries. While it is set, the `book-static` class lets CSS hide this on the
+ * setups the 3D book is about to take over — otherwise the browser paints the
+ * whole stacked article before React has hydrated, and it is visibly replaced.
+ * Once the queries have been read the class comes off, so a visitor who really
+ * is getting the fallback always sees it.
  */
-function BookStatic() {
+function BookStatic({ pending = false }: { pending?: boolean }) {
   return (
-    <section aria-label="Introduction" className="mx-auto max-w-2xl px-6 py-20">
+    <section
+      aria-label="Introduction"
+      className={`mx-auto max-w-2xl px-6 py-20 ${pending ? "book-static" : ""}`}
+    >
       <header className="mb-16 text-center">
         <h1 className="font-display text-3xl font-semibold">{cover.title}</h1>
         <p className="mt-2 font-mono text-[11px] tracking-[0.3em] text-muted uppercase">
@@ -209,7 +260,10 @@ function BookStatic() {
 
       <div className="space-y-16">
         {spreads.map((spread) => (
-          <div key={spread.id} className="space-y-6">
+          // Ids match the beat ids, so the nav's "/#about" links land here
+          // when the reader gets the static fallback instead of the book.
+          // scroll-mt clears the floating nav bar.
+          <div key={spread.id} id={spread.id} className="scroll-mt-24 space-y-6">
             <p className="font-mono text-[11px] tracking-[0.32em] text-muted uppercase">
               {spread.chapter}
             </p>
@@ -221,7 +275,7 @@ function BookStatic() {
         ))}
 
         {/* Contact: same letter as the finale overlay, minus the theatrics. */}
-        <div className="space-y-6">
+        <div id="contact" className="scroll-mt-24 space-y-6">
           <p className="font-mono text-[11px] tracking-[0.32em] text-muted uppercase">
             Epilogue. Contact
           </p>

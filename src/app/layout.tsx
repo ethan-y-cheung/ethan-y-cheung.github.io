@@ -1,5 +1,8 @@
 import type { Metadata } from "next";
 import { Fraunces, Geist, Geist_Mono, Newsreader } from "next/font/google";
+
+import SiteNav from "@/components/SiteNav";
+
 import "./globals.css";
 
 const geistSans = Geist({
@@ -43,7 +46,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       {/* ReadingLight lives on the pages that want it (the book), not here —
           the catalog wing is deliberately free of the following lamp. */}
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="flex min-h-full flex-col">
+        <SiteNav />
+        {children}
+      </body>
     </html>
   );
 }

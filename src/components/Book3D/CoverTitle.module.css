@@ -1,0 +1,72 @@
+.title {
+  position: relative;
+  flex-shrink: 0;
+  width: 3.4525em;
+  height: 2.58em;
+  font-size: 144px;
+  filter: drop-shadow(0 1px 1px rgb(0 0 0 / 65%))
+    drop-shadow(0 0 20px rgb(212 162 78 / 20%));
+}
+
+.title svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.pen {
+  stroke-dashoffset: 0;
+}
+
+.title:not([data-tracing]) .glyph {
+  mask: none;
+}
+
+.title[data-tracing] .pen {
+  visibility: hidden;
+  stroke-dashoffset: 1;
+}
+
+/* Held at nothing until the writing lands; the fade is driven by WAAPI, which
+   overrides this. Once the mask is dropped the traced copy is identical, so
+   this one stops existing rather than double-painting forever. */
+.settle {
+  opacity: 0;
+}
+
+.title:not([data-tracing]) .settle {
+  display: none;
+}
+
+.sheen {
+  pointer-events: none;
+  /* Just short of opaque: the gold should still read under the highlight. */
+  opacity: 0.92;
+}
+
+/* Only mounted-and-sweeping titles show it; a revisit skips straight to gold. */
+.title:not([data-sheen]) .sheen {
+  display: none;
+}
+
+.glitter {
+  pointer-events: none;
+  filter: drop-shadow(0 0 1.6px rgb(255 214 126 / 80%));
+}
+
+.title:not([data-glitter]) .glitter {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .title .glyph {
+    mask: none;
+  }
+
+  .glitter,
+  .settle,
+  .sheen {
+    display: none;
+  }
+}

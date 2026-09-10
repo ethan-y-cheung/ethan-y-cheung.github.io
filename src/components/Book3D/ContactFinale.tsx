@@ -53,8 +53,9 @@ export default function ContactFinale({
       ref={rootRef}
       data-shown="false"
       aria-hidden="true"
-      // The root never takes pointer events itself — beat dots and HeadBar
-      // stay clickable around the letter; only the inner column is interactive.
+      // The root never takes pointer events itself — the beat dots and the
+      // site nav stay clickable around the letter; only the inner column is
+      // interactive.
       className="pointer-events-none absolute inset-0 z-10 overflow-y-auto"
       style={{ visibility: "hidden" }}
     >

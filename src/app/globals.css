@@ -45,6 +45,25 @@ body {
 }
 
 /*
+ * The book's stacked fallback ships in the server HTML so every word is in the
+ * document even when three.js never loads. On the setups the 3D book is about
+ * to take over, though, the browser paints that whole article while React is
+ * still hydrating, and the reader watches it get replaced. This hides it up
+ * front for exactly the combination BookHero treats as "enhanced"; the class
+ * is dropped the moment the client has read those queries for real, so anyone
+ * actually staying on the fallback still sees it.
+ *
+ * `scripting: enabled` is load-bearing rather than decorative: with no JS
+ * nothing would ever replace this, so the text has to stay. Browsers without
+ * the feature fail the whole query and keep the old behaviour.
+ */
+@media (min-width: 768px) and (prefers-reduced-motion: no-preference) and (scripting: enabled) {
+  .book-static {
+    display: none;
+  }
+}
+
+/*
  * The catalog wing (/projects pages): its own light-first theme, scoped so the
  * book's dark room is untouched. Toggled by `data-catalog-theme` on <html>,
  * set pre-paint by an inline script (see catalog Shell) and flipped by the

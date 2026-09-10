@@ -12,9 +12,10 @@ import ThemeToggle from "./ThemeToggle";
 const THEME_SCRIPT = `try{if(localStorage.getItem("catalog-theme")==="dark")document.documentElement.dataset.catalogTheme="dark"}catch(e){}`;
 
 /**
- * Page chrome for the catalog wing (/projects and its case studies).
+ * Page chrome for the catalog wing (/about, /experience, /contact, /projects
+ * and its case studies).
  *
- * The viewport never scrolls: the header is a fixed band and only the list
+ * The viewport never scrolls: the header is a fixed band and only the content
  * below it moves. Two details make that work without visual seams.
  *
  * The scroll container is full width with the column centered inside, so the
@@ -26,6 +27,9 @@ const THEME_SCRIPT = `try{if(localStorage.getItem("catalog-theme")==="dark")docu
  * bottom border instead of passing beneath it. That is why it needs no
  * background: the dot grid and its cursor glow run through the header
  * uninterrupted, where an opaque band would cut a rectangle out of them.
+ *
+ * There is no home button here any more — SiteNav floats above every page with
+ * the full route list, and the header's top padding is what clears it.
  */
 export default function Shell({
   heading,
@@ -47,7 +51,9 @@ export default function Shell({
       <DotGrid />
 
       <div className="relative z-10 mx-auto w-full max-w-[880px] shrink-0 px-5 sm:px-8">
-        <header className="flex items-start justify-between gap-6 border-b border-[var(--cat-line)] pt-10 pb-7">
+        {/* pt-24 is clearance for the floating nav pill, not taste — it is
+            fixed at top-5 and stands ~44px tall. */}
+        <header className="flex items-start justify-between gap-6 border-b border-[var(--cat-line)] pt-24 pb-7">
           {heading ?? <span />}
           {/* Nudged down so the icon boxes read as level with the cap height
               of the display title beside them, not with its line box. */}
@@ -60,21 +66,6 @@ export default function Shell({
                 ← Projects
               </Link>
             ) : null}
-            <Link href="/" aria-label="Home" className={`${control} w-9`}>
-              <svg
-                viewBox="0 0 24 24"
-                width={16}
-                height={16}
-                fill="none"
-                stroke="currentColor"
-                strokeWidth={1.8}
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M3 10.5 12 3l9 7.5" />
-                <path d="M5.5 9.5V21h13V9.5" />
-              </svg>
-            </Link>
             <ThemeToggle />
           </div>
         </header>
