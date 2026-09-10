@@ -127,9 +127,33 @@ export default function CoverTitle({ active }: { active: boolean }) {
       }
     };
 
+    /**
+     * Remember the intro only once it has actually been watched.
+     *
+     * Marking it at the START was the bug behind "it never plays in
+     * production": this component is inside the Canvas, so a Suspense retry
+     * while the book's textures stream in remounts it mid-animation. The
+     * doomed instance had already burned the flag, its animations were
+     * cancelled with the old DOM, and the replacement instance read the flag
+     * and declined to play. Locally the textures are warm, nothing remounts,
+     * and the bug is invisible.
+     */
+    const markPlayed = () => {
+      writtenThisVisit = true;
+      try {
+        sessionStorage.setItem(SESSION_KEY, "1");
+      } catch {
+        // The in-memory flag still prevents repeats during this visit.
+      }
+    };
+
     const finish = () => {
       if (finished) return;
       finished = true;
+      // Reaching the end of the writing counts as having seen it, even if the
+      // glint got cut short by the cover opening. An interruption BEFORE that
+      // leaves the flag alone, so a remount gets to start over.
+      if (writingComplete) markPlayed();
       cancelAnimationFrame(frame);
       delete title.dataset.tracing;
       delete title.dataset.glitter;
@@ -144,12 +168,6 @@ export default function CoverTitle({ active }: { active: boolean }) {
       if (!title.isConnected || getComputedStyle(title).visibility === "hidden") {
         frame = requestAnimationFrame(start);
         return;
-      }
-      writtenThisVisit = true;
-      try {
-        sessionStorage.setItem(SESSION_KEY, "1");
-      } catch {
-        // Storage can be blocked in private or embedded browsing contexts.
       }
       title.dataset.glitter = "true";
 
@@ -248,7 +266,10 @@ export default function CoverTitle({ active }: { active: boolean }) {
         }
         // Let the glint cross and the last flecks fade, then stop all
         // per-frame work.
-        if (writingComplete && sheenDone && !liveSparks) finish();
+        if (writingComplete && sheenDone && !liveSparks) {
+          markPlayed();
+          finish();
+        }
         else frame = requestAnimationFrame(tick);
       };
       frame = requestAnimationFrame(tick);
